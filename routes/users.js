@@ -8,7 +8,6 @@ const { getUsers, createUser, getUser } = require("../controllers/users");
 // GET /users - Retrieves a list of all users
 router.get("/", getUsers);
 
-// Define the route to get a specific user by their ID
 // GET /users/:userId - Retrieves a user with the specified userId
 router.get("/:userId", getUser);
 

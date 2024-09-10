@@ -36,7 +36,6 @@ const createUser = (req, res) => {
       res.status(201).send(user);
     })
     .catch((err) => {
-      // Log the error details for debugging
       console.error(err);
 
       // Handle validation errors, e.g., missing required fields
@@ -70,13 +69,6 @@ const getUser = (req, res) => {
       if (err.name === "DocumentNotFoundError") {
         return res.status(NOT_FOUND).send({ message: "Document not found" });
       }
-
-      // Handle invalid ObjectId format (e.g., malformed IDs)
-      if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data" });
-      }
-
-      // For other errors, return an internal server error response
       return res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });

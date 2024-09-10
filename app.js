@@ -28,13 +28,4 @@ mongoose
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
-// Middleware to add a mock user to the request object
-app.use((req, res, next) => {
-  req.user = {
-    _id: "5d8b8592978f8bd833ca8133", // Set a static user ID for demonstration purposes
-  };
-  next(); // Call the next middleware or route handler
-});
-
-// Use the main router for handling all routes
 app.use("/", mainRouter);
