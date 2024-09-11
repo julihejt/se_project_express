@@ -20,29 +20,24 @@ const {
 const createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
 
-  // Check if email or password are missing
   if (!email || !password) {
     return res
       .status(BAD_REQUEST)
-      .send({ message: "Email and password are required" });
+      .send({ message: `${BadRequest} from createUser` });
   }
 
-  // Check if email already exists
   User.findOne({ email })
-    .then((existingUser) => {
-      if (existingUser) {
-        return res
-          .status(DUPLICATE_ERROR)
-          .send({ message: "Email is already registered" });
+    .then((existingEmail) => {
+      if (existingEmail) {
+        const error = new Error();
+        error.name = "DuplicateError";
+        throw error;
       }
-
-      // Hash the password
       return bcrypt.hash(password, 10);
     })
-    .then((hashedPassword) => {
-      // Create a new user with the hashed password
-      return User.create({ name, avatar, email, password: hashedPassword });
-    })
+    .then((hashedPassword) =>
+      User.create({ name, avatar, email, password: hashedPassword })
+    )
     .then((user) => {
       res.status(201).send({
         name: user.name,
@@ -54,11 +49,16 @@ const createUser = (req, res) => {
       if (err.name === "ValidationError") {
         return res
           .status(BAD_REQUEST)
-          .send({ message: "Invalid data from createUser" });
+          .send({ message: `${BadRequest} from createUser` });
+      }
+      if (err.name === "DuplicateError" || err.code === 11000) {
+        return res
+          .status(DUPLICATE_ERROR)
+          .send({ message: `${DuplicateError} from createUser` });
       }
       return res
         .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "Internal Server Error from createUser" });
+        .send({ message: `${InternalServerError} from createUser` });
     });
 };
 
@@ -70,7 +70,7 @@ const getUsers = (req, res) => {
       console.error(err);
       res
         .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "Internal Server Error from getUsers" });
+        .send({ message: `${InternalServerError} from getUsers` });
     });
 };
 
@@ -102,16 +102,13 @@ const getUser = (req, res) => {
 const login = (req, res) => {
   const { email, password } = req.body;
 
-  // Check if email or password is missing
   if (!email || !password) {
     return res
       .status(BAD_REQUEST)
-      .send({ message: "Email and password are required" });
+      .send({ message: `${BadRequest} from login` });
   }
 
-  // Find user by email and include the password field in the result
   User.findOne({ email })
-    .select("+password")
     .then((user) => {
       if (!user) {
         return res
@@ -119,26 +116,22 @@ const login = (req, res) => {
           .send({ message: "Invalid email or password" });
       }
 
-      // Compare the provided password with the hashed password in the database
-      return bcrypt.compare(password, user.password).then((isMatch) => {
-        if (!isMatch) {
+      return bcrypt.compare(password, user.password).then((isValid) => {
+        if (!isValid) {
           return res
             .status(UNAUTHORIZED_ERROR_CODE)
             .send({ message: "Invalid email or password" });
         }
 
-        // Create and send the JWT token
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "7d",
         });
-        return res.send({ token });
+        res.send({ token });
       });
     })
     .catch((err) => {
       console.error(err);
-      res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "Internal Server Error from login" });
+      res.status(INTERNAL_SERVER_ERROR).send({ message: "Server error" });
     });
 };
 
@@ -151,15 +144,16 @@ const updateUser = (req, res) => {
     { name, avatar },
     { new: true, runValidators: true }
   )
-    .orFail(new Error("NotFound"))
-    .then((user) => res.status(OK).send({ data: user }))
+    .orFail()
+    .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === "ValidationError") {
+        console.error(err);
         return res
           .status(BAD_REQUEST)
-          .send({ message: "Invalid data from updateUser" });
+          .send({ message: `${BadRequest} updateUser` });
       }
-      if (err.message === "NotFound") {
+      if (err.name === "DocumentNotFoundError") {
         return res
           .status(NOT_FOUND)
           .send({ message: `${NotFoundError} from updateUser` });

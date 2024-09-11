@@ -7,14 +7,19 @@ const {
   BadRequest,
   InternalServerError,
   NotFoundError,
-  AccessDeniedError,
 } = require("../utils/errors");
 
 // Create a new clothing item
 const createItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
 
-  return ClothingItem.create({
+  if (!req.user || !req.user._id) {
+    return res
+      .status(401) // Unauthorized
+      .send({ message: "Authorization required" });
+  }
+
+  ClothingItem.create({
     name,
     weather,
     imageUrl,
