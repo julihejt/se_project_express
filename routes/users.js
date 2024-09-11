@@ -2,17 +2,28 @@
 const router = require("express").Router();
 
 // Import the controller functions for user operations
-const { getUsers, createUser, getUser } = require("../controllers/users");
+const {
+  getUsers,
+  createUser,
+  getUser,
+  updateUser,
+} = require("../controllers/users");
 
-// Define the route to get a list of all users
+const auth = require("../middlewares/auth"); // Middleware for authorization
+
 // GET /users - Retrieves a list of all users
-router.get("/", getUsers);
+router.get("/", auth, getUsers);
+
+// GET /users/me - Retrieves the current logged-in user data
+router.get("/me", auth, getUser);
+
+// PATCH /users/me - Updates the profile of the current logged-in user
+router.patch("/me", auth, updateUser);
 
 // GET /users/:userId - Retrieves a user with the specified userId
-router.get("/:userId", getUser);
+router.get("/:userId", auth, getUser);
 
-// Define the route to create a new user
-// POST /users - Creates a new user with the data provided in the request body
+// POST /users - Create a new user (open route)
 router.post("/", createUser);
 
 // Export the router so it can be used in the main application file

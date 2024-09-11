@@ -1,11 +1,32 @@
-// Define HTTP status codes
-const BAD_REQUEST = 400; // Bad Request: The server cannot process the request due to client error (e.g., malformed request syntax).
-const NOT_FOUND = 404;   // Not Found: The requested resource could not be found on the server.
-const INTERNAL_SERVER_ERROR = 500; // Internal Server Error: The server encountered an unexpected condition that prevented it from fulfilling the request.
+const OK = 200;
+const NO_CONTENT = 204;
+const BAD_REQUEST = 400;
+const NOT_FOUND = 404;
+const INTERNAL_SERVER_ERROR = 500;
+const DUPLICATE_ERROR = 409;
+const UNAUTHORIZED_ERROR_CODE = 401;
+const ACCESS_DENIED_ERROR = 403;
 
-// Export the status codes so they can be used in other parts of the application
+const BadRequest = "Bad Request Error";
+const InternalServerError = "Internal Server Error";
+const NotFoundError = "Not Found Error";
+const DuplicateError = "Email Already Exists";
+const UnauthorizedError = "Authorization Required";
+const AccessDeniedError = "You do not have permission";
+
 module.exports = {
+  OK,
+  NO_CONTENT,
   BAD_REQUEST,
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
+  DUPLICATE_ERROR,
+  UNAUTHORIZED_ERROR_CODE,
+  ACCESS_DENIED_ERROR,
+  BadRequest,
+  InternalServerError,
+  NotFoundError,
+  DuplicateError,
+  UnauthorizedError,
+  AccessDeniedError,
 };

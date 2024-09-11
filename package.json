@@ -1,7 +1,7 @@
 {
   "name": "se_project_express-main",
   "version": "0.1.0",
-  "description": "The back-end project is focused on creating a server for the WTWR application. You’ll gain a deeper understanding of how to work with databases, set up security and testing, and deploy web applications on a remote machine. The eventual goal is to create a server with an API and user authorization. ## Running the Project `npm run start` — to launch the server",
+  "description": "The back-end project is focused on creating a server for the WTWR application. You’ll gain a deeper understanding of how to work with databases, set up security and testing, and deploy web applications on a remote machine. The eventual goal is to create a server with an API and user tion. ## Running the Project `npm run start` — to launch the server",
   "main": "app.js",
   "scripts": {
     "lint": "npx eslint .",
@@ -12,7 +12,9 @@
   "author": "Julie Hejtmanek",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^6.6.1",
     "validator": "^13.12.0"
   },

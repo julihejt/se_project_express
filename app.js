@@ -9,23 +9,30 @@ const app = express();
 // Get the port from environment variables or default to 3001
 const { PORT = 3001 } = process.env;
 
-// Disable strict query mode in Mongoose (for compatibility with older Mongoose versions)
+// Disable strict query mode in Mongoose
 mongoose.set("strictQuery", false);
-
-// Start the server and listen on the specified port
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`); // Log a message when the server starts
-});
 
 // Connect to the MongoDB database
 mongoose
-  .connect("mongodb://127.0.0.1:27017/wtwr_db") // Connect to the database at this URI
+  .connect("mongodb://127.0.0.1:27017/wtwr_db")
   .then(() => {
-    console.log("Connected to DB"); // Log a success message if the connection is successful
+    console.log("Connected to DB");
   })
-  .catch((e) => console.error(e)); // Log any errors if the connection fails
+  .catch((e) => console.error(e));
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
+// Main routes
 app.use("/", mainRouter);
+
+// Global error handler to catch unhandled errors
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send({ message: "Internal Server Error" });
+});
+
+// Start the server and listen on the specified port
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

@@ -1,79 +1,180 @@
-// Import the User model for performing database operations on users
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-
-// Import common error codes for handling different types of errors
+const { JWT_SECRET } = require("../utils/config");
 const {
+  OK,
   BAD_REQUEST,
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
+  DUPLICATE_ERROR,
+  UNAUTHORIZED_ERROR_CODE,
+  BadRequest,
+  InternalServerError,
+  NotFoundError,
+  DuplicateError,
+  UnauthorizedError,
 } = require("../utils/errors");
 
-// Controller to get all users from the database
-const getUsers = (req, res) => {
-  User.find({}) // Fetch all users
-    .then((users) => {
-      // If successful, send back the list of users
-      res.send(users);
-    })
-    .catch((err) => {
-      // Log the error details for debugging
-      console.error(err);
-      // Respond with an internal server error if something goes wrong
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
-    });
-};
-
-// Controller to create a new user
+// Create a new user
 const createUser = (req, res) => {
-  const { name, avatar } = req.body; // Extract name and avatar from the request body
+  const { name, avatar, email, password } = req.body;
 
-  // Create a new User document based on the provided data
-  User.create({ name, avatar })
+  // Check if email or password are missing
+  if (!email || !password) {
+    return res
+      .status(BAD_REQUEST)
+      .send({ message: "Email and password are required" });
+  }
+
+  // Check if email already exists
+  User.findOne({ email })
+    .then((existingUser) => {
+      if (existingUser) {
+        return res
+          .status(DUPLICATE_ERROR)
+          .send({ message: "Email is already registered" });
+      }
+
+      // Hash the password
+      return bcrypt.hash(password, 10);
+    })
+    .then((hashedPassword) => {
+      // Create a new user with the hashed password
+      return User.create({ name, avatar, email, password: hashedPassword });
+    })
     .then((user) => {
-      // Send back the newly created user and set the status to 201 (Created)
-      res.status(201).send(user);
+      res.status(201).send({
+        name: user.name,
+        avatar: user.avatar,
+        email: user.email,
+      });
+    })
+    .catch((err) => {
+      if (err.name === "ValidationError") {
+        return res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid data from createUser" });
+      }
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "Internal Server Error from createUser" });
+    });
+};
+
+// Get all users
+const getUsers = (req, res) => {
+  User.find()
+    .then((users) => res.status(OK).send(users))
+    .catch((err) => {
+      console.error(err);
+      res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "Internal Server Error from getUsers" });
+    });
+};
+
+// Get a single user by ID
+const getUser = (req, res) => {
+  const { userId } = req.params;
+
+  User.findById(userId)
+    .orFail(new Error("NotFound"))
+    .then((user) => res.status(OK).send(user))
+    .catch((err) => {
+      if (err.message === "NotFound") {
+        return res
+          .status(NOT_FOUND)
+          .send({ message: `${NotFoundError} from getUser` });
+      }
+      if (err.name === "CastError") {
+        return res
+          .status(BAD_REQUEST)
+          .send({ message: `${BadRequest} from getUser` });
+      }
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: `${InternalServerError} from getUser` });
+    });
+};
+
+// Login controller
+const login = (req, res) => {
+  const { email, password } = req.body;
+
+  // Check if email or password is missing
+  if (!email || !password) {
+    return res
+      .status(BAD_REQUEST)
+      .send({ message: "Email and password are required" });
+  }
+
+  // Find user by email and include the password field in the result
+  User.findOne({ email })
+    .select("+password")
+    .then((user) => {
+      if (!user) {
+        return res
+          .status(UNAUTHORIZED_ERROR_CODE)
+          .send({ message: "Invalid email or password" });
+      }
+
+      // Compare the provided password with the hashed password in the database
+      return bcrypt.compare(password, user.password).then((isMatch) => {
+        if (!isMatch) {
+          return res
+            .status(UNAUTHORIZED_ERROR_CODE)
+            .send({ message: "Invalid email or password" });
+        }
+
+        // Create and send the JWT token
+        const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+          expiresIn: "7d",
+        });
+        return res.send({ token });
+      });
     })
     .catch((err) => {
       console.error(err);
-
-      // Handle validation errors, e.g., missing required fields
-      if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data" });
-      }
-
-      // For any other errors, respond with an internal server error
-      return res
+      res
         .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+        .send({ message: "Internal Server Error from login" });
     });
 };
 
-// Controller to get a single user by their ID
-const getUser = (req, res) => {
-  const { userId } = req.params; // Extract userId from the request parameters
+// Update user
+const updateUser = (req, res) => {
+  const { name, avatar } = req.body;
 
-  // Find a user by their ID
-  User.findById(userId)
-    .orFail() // Automatically throw an error if the user is not found
-    .then((user) => {
-      // Send back the user data if found
-      res.send(user);
-    })
+  User.findByIdAndUpdate(
+    req.user._id,
+    { name, avatar },
+    { new: true, runValidators: true }
+  )
+    .orFail(new Error("NotFound"))
+    .then((user) => res.status(OK).send({ data: user }))
     .catch((err) => {
-      // Log the error details for debugging
-      console.log(err);
-
-      // Handle case where no user is found with the given ID
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "Document not found" });
+      if (err.name === "ValidationError") {
+        return res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid data from updateUser" });
+      }
+      if (err.message === "NotFound") {
+        return res
+          .status(NOT_FOUND)
+          .send({ message: `${NotFoundError} from updateUser` });
       }
       return res
         .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+        .send({ message: `${InternalServerError} from updateUser` });
     });
 };
 
-// Export the controller functions to be used in other parts of the application
-module.exports = { getUsers, createUser, getUser };
+// Export the controller functions
+module.exports = {
+  createUser,
+  getUsers,
+  getUser,
+  login,
+  updateUser,
+};

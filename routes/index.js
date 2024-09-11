@@ -1,21 +1,37 @@
-// Import the Express Router to handle routing
-const router = require("express").Router();
+const express = require("express");
+const router = express.Router();
 
-// Import the NOT_FOUND error code for handling 404 errors
-const { NOT_FOUND } = require("../utils/errors");
-
+// Import necessary controllers and routers
+const userRouter = require("./users");
+const { login, createUser } = require("../controllers/users");
 const itemRouter = require("./clothingItems");
 
-// Use the userRouter for all routes starting with /users
-// This will route requests like /users and /users/:userId to the userRouter
+// Import error utility for custom error messages
+const {
+  NOT_FOUND,
+  INTERNAL_SERVER_ERROR,
+  NotFoundError,
+} = require("../utils/errors");
+
+// Use routers for routes
+router.use("/items", itemRouter);
 router.use("/users", userRouter);
 
-// Use the itemRouter for all routes starting with /items
-// This will route requests like /items and /items/:itemId to the itemRouter
-router.use("/items", itemRouter);
+// Signin and Signup routes
+router.post("/signin", login);
+router.post("/signup", createUser);
 
+// 404 Route Handler (for undefined routes)
 router.use((req, res) => {
-  res.status(NOT_FOUND).send({ message: "Resource not found" });
+  res.status(NOT_FOUND).json({ message: "Resource not found" });
+});
+
+// Error Handling Middleware
+router.use((err, req, res, next) => {
+  console.error(err.stack); // Log the error stack for debugging
+  res
+    .status(INTERNAL_SERVER_ERROR || 500)
+    .json({ message: "Internal Server Error" });
 });
 
 module.exports = router;
