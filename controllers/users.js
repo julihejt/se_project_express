@@ -16,6 +16,11 @@ const {
   UnauthorizedError,
 } = require("../utils/errors");
 
+// Function to generate JWT
+const generateToken = (user) => {
+  return jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: "7d" });
+};
+
 // Create a new user
 const createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
@@ -76,9 +81,7 @@ const getUsers = (req, res) => {
 
 // Get a single user by ID
 const getUser = (req, res) => {
-  const { userId } = req.params;
-
-  User.findById(userId)
+  User.findById(req.user._id)
     .orFail(new Error("NotFound"))
     .then((user) => res.status(OK).send(user))
     .catch((err) => {
