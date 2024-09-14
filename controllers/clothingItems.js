@@ -73,34 +73,31 @@ const deleteItem = (req, res) => {
   const userId = req.user._id;
 
   ClothingItem.findById(itemId)
-    .orFail() // Ensures the item exists or throws an error
+    .orFail(new Error("Not Found")) // Throw a clear 'Not Found' error
     .then((item) => {
-      // Check if the user owns the item
       if (item.owner.toString() !== userId) {
-        const error = new Error();
-        error.name = "Access Denied";
-        throw error; // Throws error if user doesn't own the item
+        const error = new Error("Access Denied");
+        throw error;
       }
       return ClothingItem.findByIdAndDelete(itemId); // Deletes the item
     })
-    .then(() => res.send({ message: '"Item successfully deleted"' })) // Success response
+    .then(() => res.status(200).json({ message: "Item successfully deleted" }))
     .catch((err) => {
-      if (err.name === "Access Denied") {
+      // More explicit error handling
+      if (err.message === "Access Denied") {
         return res
-          .status(ACCESS_DENIED_ERROR)
-          .send({ message: "Access Denied to delete this item" });
+          .status(403)
+          .json({ message: "Access Denied to delete this item" });
+      }
+      if (err.message === "Not Found") {
+        return res.status(404).json({ message: "Item not found" });
       }
       if (err.name === "ValidationError" || err.name === "CastError") {
         return res
-          .status(BAD_REQUEST)
-          .send({ message: "Bad request while deleting item" });
+          .status(400)
+          .json({ message: "Bad request while deleting item" });
       }
-      if (err.name === "Error Document Not Found ") {
-        return res.status(NOT_FOUND).send({ message: "Item not found" });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "International Server Error" });
+      return res.status(500).json({ message: "Internal Server Error" });
     });
 };
 
