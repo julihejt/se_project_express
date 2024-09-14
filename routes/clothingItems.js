@@ -11,11 +11,11 @@ const {
   dislikeItem,
 } = require("../controllers/clothingItems");
 
-// Public Route - Create a new clothing item (accessible without auth)
-router.post("/", createItem);
-
 // Apply auth middleware for protected routes
 router.use(auth);
+
+// Public Route - Create a new clothing item (accessible without auth)
+router.post("/", createItem);
 
 // Protected Routes
 router.get("/", getItems);
