@@ -27,7 +27,7 @@ app.use(express.json());
 app.use("/", mainRouter);
 
 // Global error handler to catch unhandled errors
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   console.error(err.stack);
   res.status(500).send({ message: "Internal Server Error" });
 });

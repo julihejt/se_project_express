@@ -13,13 +13,12 @@ const {
   InternalServerError,
   NotFoundError,
   DuplicateError,
-  UnauthorizedError,
 } = require("../utils/errors");
 
 // Function to generate JWT
-const generateToken = (user) => {
-  return jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: "7d" });
-};
+// const generatetoken = (user) =>
+// jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: "7d" });
+// return res.send({ generatetoken });
 
 // Create a new user
 const createUser = (req, res) => {
@@ -31,7 +30,7 @@ const createUser = (req, res) => {
       .send({ message: `${BadRequest} from createUser` });
   }
 
-  User.findOne({ email })
+  return User.findOne({ email })
     .then((existingEmail) => {
       if (existingEmail) {
         const error = new Error();
@@ -43,13 +42,13 @@ const createUser = (req, res) => {
     .then((hashedPassword) =>
       User.create({ name, avatar, email, password: hashedPassword })
     )
-    .then((user) => {
+    .then((user) =>
       res.status(201).send({
         name: user.name,
         avatar: user.avatar,
         email: user.email,
-      });
-    })
+      })
+    )
     .catch((err) => {
       if (err.name === "ValidationError") {
         return res
@@ -64,18 +63,6 @@ const createUser = (req, res) => {
       return res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: `${InternalServerError} from createUser` });
-    });
-};
-
-// Get all users
-const getUsers = (req, res) => {
-  User.find()
-    .then((users) => res.status(OK).send(users))
-    .catch((err) => {
-      console.error(err);
-      res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: `${InternalServerError} from getUsers` });
     });
 };
 
@@ -111,7 +98,7 @@ const login = (req, res) => {
       .send({ message: `${BadRequest} from login` });
   }
 
-  User.findOne({ email })
+  return User.findOne({ email })
     .select("+password")
     .then((user) => {
       if (!user) {
@@ -130,7 +117,7 @@ const login = (req, res) => {
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "7d",
         });
-        res.send({ token });
+        return res.send({ token });
       });
     })
     .catch((err) => {
@@ -171,7 +158,6 @@ const updateUser = (req, res) => {
 // Export the controller functions
 module.exports = {
   createUser,
-  getUsers,
   getUser,
   login,
   updateUser,

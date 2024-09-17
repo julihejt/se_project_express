@@ -4,6 +4,7 @@ const {
   BAD_REQUEST,
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
+  ACCESS_DENIED_ERROR,
   BadRequest,
   InternalServerError,
   NotFoundError,
@@ -13,31 +14,25 @@ const {
 const createItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
 
-  if (!req.user || !req.user._id) {
-    return res
-      .status(401) // Unauthorized
-      .send({ message: "Authorization required" });
-  }
-
+  // Creating the clothing item
   ClothingItem.create({
     name,
     weather,
     imageUrl,
-    owner: req.user._id,
+    owner: req.user._id, // The authenticated user's ID
   })
-    .then((item) => {
-      return res.status(201).send({ data: item });
-    })
+    .then((item) => 
+      // Respond with the created item and a 201 status
+       res.status(201).send({ data: item })
+    )
     .catch((err) => {
-      // Handle validation errors correctly
+      // Handle validation errors (like missing required fields)
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).json({ message: "Invalid data" });
+        return res.status(400).json({ message: "Invalid data" });
       }
 
-      // Any other error
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .json({ message: "Internal Server Error" });
+      // Handle other server errors
+      return res.status(500).json({ message: "Internal Server Error" });
     });
 };
 
@@ -51,22 +46,6 @@ const getItems = (req, res) => {
 };
 
 // Update a clothing item
-const updateItem = (req, res) => {
-  const { itemId } = req.params;
-  const { imageUrl } = req.body;
-
-  ClothingItem.findByIdAndUpdate(itemId, { $set: { imageUrl } }, { new: true })
-    .orFail()
-    .then((item) => res.status(OK).send({ data: item }))
-    .catch((err) => {
-      if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).send({ message: BadRequest });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: InternalServerError });
-    });
-};
 
 const deleteItem = (req, res) => {
   const { itemId } = req.params;
@@ -79,25 +58,24 @@ const deleteItem = (req, res) => {
         const error = new Error("Access Denied");
         throw error;
       }
-      return ClothingItem.findByIdAndDelete(itemId); // Deletes the item
+      return ClothingItem.findByIdAndDelete(itemId); //  item
     })
-    .then(() => res.status(200).json({ message: "Item successfully deleted" }))
+    .then(() => res.send({ message: "Item successfully d" }))
     .catch((err) => {
-      // More explicit error handling
-      if (err.message === "Access Denied") {
+      if (err.name === "AccessDeniedError") {
         return res
-          .status(403)
-          .json({ message: "Access Denied to delete this item" });
+          .status(ACCESS_DENIED_ERROR)
+          .send({ message: "Access Denied" });
       }
-      if (err.message === "Not Found") {
-        return res.status(404).json({ message: "Item not found" });
+      if (err.name === "NotFoundError") {
+        return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
       if (err.name === "ValidationError" || err.name === "CastError") {
-        return res
-          .status(400)
-          .json({ message: "Bad request while deleting item" });
+        return res.status(BAD_REQUEST).send({ message: "Invalid data" });
       }
-      return res.status(500).json({ message: "Internal Server Error" });
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "Internal Server Error" });
     });
 };
 
@@ -148,7 +126,6 @@ const dislikeItem = (req, res) => {
 module.exports = {
   createItem,
   getItems,
-  updateItem,
   deleteItem,
   likeItem,
   dislikeItem,

@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 // Import necessary controllers and routers
@@ -7,11 +8,7 @@ const { login, createUser } = require("../controllers/users");
 const itemRouter = require("./clothingItems");
 
 // Import error utility for custom error messages
-const {
-  NOT_FOUND,
-  INTERNAL_SERVER_ERROR,
-  NotFoundError,
-} = require("../utils/errors");
+const { NOT_FOUND, INTERNAL_SERVER_ERROR } = require("../utils/errors");
 
 // Use routers for routes
 router.use("/items", itemRouter);
@@ -27,7 +24,7 @@ router.use((req, res) => {
 });
 
 // Error Handling Middleware
-router.use((err, req, res, next) => {
+router.use((err, req, res) => {
   console.error(err.stack); // Log the error stack for debugging
   res
     .status(INTERNAL_SERVER_ERROR || 500)

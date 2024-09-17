@@ -11,6 +11,8 @@ const {
   dislikeItem,
 } = require("../controllers/clothingItems");
 
+router.get("/", getItems);
+
 // Apply auth middleware for protected routes
 router.use(auth);
 
@@ -18,7 +20,6 @@ router.use(auth);
 router.post("/", createItem);
 
 // Protected Routes
-router.get("/", getItems);
 router.delete("/:itemId", deleteItem);
 router.put("/:itemId/likes", likeItem);
 router.delete("/:itemId/likes", dislikeItem);
