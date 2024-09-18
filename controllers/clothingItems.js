@@ -64,15 +64,15 @@ const deleteItem = (req, res) => {
     })
     .then(() => res.send({ message: "Item successfully d" }))
     .catch((err) => {
-      if (err.message === "AccessDeniedError") {
+      if (err.message === "Access Denied") {
         return res
           .status(ACCESS_DENIED_ERROR)
           .send({ message: "Access Denied" });
       }
-      if (err.message === "Not Found Error") {
+      if (err.message === "Not Found") {
         return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
-      if (err.message === "Validation Error" || err.name === "CastError") {
+      if (err.message === "Validation" || err.name === "CastError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid data" });
       }
       return res
