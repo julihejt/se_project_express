@@ -21,18 +21,20 @@ const createItem = (req, res) => {
     imageUrl,
     owner: req.user._id, // The authenticated user's ID
   })
-    .then((item) => 
+    .then((item) =>
       // Respond with the created item and a 201 status
-       res.status(201).send({ data: item })
+      res.status(201).send({ data: item })
     )
     .catch((err) => {
       // Handle validation errors (like missing required fields)
       if (err.name === "ValidationError") {
-        return res.status(400).json({ message: "Invalid data" });
+        return res.status(BAD_REQUEST).json({ message: "Invalid data" });
       }
 
       // Handle other server errors
-      return res.status(500).json({ message: "Internal Server Error" });
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .json({ message: "Internal Server Error" });
     });
 };
 
@@ -62,15 +64,15 @@ const deleteItem = (req, res) => {
     })
     .then(() => res.send({ message: "Item successfully d" }))
     .catch((err) => {
-      if (err.name === "AccessDeniedError") {
+      if (err.message === "AccessDeniedError") {
         return res
           .status(ACCESS_DENIED_ERROR)
           .send({ message: "Access Denied" });
       }
-      if (err.name === "NotFoundError") {
+      if (err.message === "Not Found Error") {
         return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
-      if (err.name === "ValidationError" || err.name === "CastError") {
+      if (err.message === "Validation Error" || err.name === "CastError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid data" });
       }
       return res
