@@ -26,12 +26,6 @@ app.use(express.json());
 // Main routes
 app.use("/", mainRouter);
 
-// Global error handler to catch unhandled errors
-// app.use((err, req, res) => {
-// console.error(err.stack);
-// res.status(500).send({ message: "Internal Server Error" });
-// });
-
 // Start the server and listen on the specified port
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
