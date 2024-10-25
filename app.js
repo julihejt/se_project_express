@@ -29,6 +29,7 @@ mongoose
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
+app.use(cors());
 
 // Main routes
 app.use("/", mainRouter);
