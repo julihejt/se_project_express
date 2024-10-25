@@ -6,6 +6,13 @@ const mainRouter = require("./routes/index"); // Import the main router for hand
 // Create an instance of the Express application
 const app = express();
 
+const cors = require("cors");
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+  })
+);
+
 // Get the port from environment variables or default to 3001
 const { PORT = 3001 } = process.env;
 
