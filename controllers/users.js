@@ -15,11 +15,6 @@ const {
   DuplicateError,
 } = require("../utils/errors");
 
-// Function to generate JWT
-// const generatetoken = (user) =>
-// jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: "7d" });
-// return res.send({ generatetoken });
-
 // Create a new user
 const createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
@@ -117,7 +112,15 @@ const login = (req, res) => {
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "7d",
         });
-        return res.send({ token });
+        return res.status(200).send({
+          token,
+          user: {
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+            _id: user._id,
+          },
+        });
       });
     })
     .catch((err) => {
