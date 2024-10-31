@@ -45,5 +45,7 @@ WTWR helps users decide what to wear based on current weather conditions.
 - **Clothing Items**: Add, edit, delete, and retrieve clothing items.
 - **Weather-Based Recommendations**: Personalized suggestions based on current weather conditions.
 
+
 [Link to the project on GitHub] (https://github.com/julihejt/se_project_express)
+
 [Link to Frontend Repo] (https://github.com/julihejt/se_project_react-main-jh)
