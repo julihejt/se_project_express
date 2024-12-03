@@ -1,127 +1,92 @@
 const ClothingItem = require("../models/clothingItems");
-const {
-  OK,
-  BAD_REQUEST,
-  NOT_FOUND,
-  INTERNAL_SERVER_ERROR,
-  ACCESS_DENIED_ERROR,
-  BadRequest,
-  InternalServerError,
-  NotFoundError,
-} = require("../utils/errors");
+const { OK, handleErrors } = require("../utils/errors"); // Import custom errors
 
+const ForbiddenError = require("../errors/forbiddenError");
 // Create a new clothing item
-const createItem = (req, res) => {
+const createItem = (req, res, next) => {
   const { name, weather, imageUrl } = req.body;
 
-  // Creating the clothing item
   ClothingItem.create({
     name,
     weather,
     imageUrl,
     owner: req.user._id, // The authenticated user's ID
   })
-    .then((item) =>
-      // Respond with the created item and a 201 status
-      res.status(201).send({ data: item })
-    )
+    .then((item) => res.status(OK).send({ data: item }))
     .catch((err) => {
-      // Handle validation errors (like missing required fields)
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).json({ message: "Invalid data" });
+        return next(new BadRequestError("Invalid data"));
       }
-
-      // Handle other server errors
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .json({ message: "Internal Server Error" });
+      handleErrors(err, next); // Pass to centralized error handler
     });
 };
 
 // Get all clothing items
-const getItems = (req, res) => {
+const getItems = (req, res, next) => {
   ClothingItem.find({})
     .then((items) => res.status(OK).send(items))
-    .catch(() =>
-      res.status(INTERNAL_SERVER_ERROR).send({ message: InternalServerError })
-    );
+    .catch((err) => next(new InternalServerError("Failed to fetch items")));
 };
 
-// Update a clothing item
-
-const deleteItem = (req, res) => {
+// Delete a clothing item
+const deleteItem = (req, res, next) => {
   const { itemId } = req.params;
   const userId = req.user._id;
 
   ClothingItem.findById(itemId)
-    .orFail(new Error("Not Found")) // Throw a clear 'Not Found' error
+    .orFail(() => {
+      throw new NotFoundError("Item not found");
+    })
     .then((item) => {
       if (item.owner.toString() !== userId) {
-        const error = new Error("Access Denied");
-        throw error;
+        throw new ForbiddenError("Access denied");
       }
-      return ClothingItem.findByIdAndDelete(itemId); //  item
+      return ClothingItem.findByIdAndDelete(itemId);
     })
-    .then(() => res.send({ message: "Item successfully d" }))
+    .then(() => res.send({ message: "Item successfully deleted" }))
     .catch((err) => {
-      if (err.message === "Access Denied") {
-        return res
-          .status(ACCESS_DENIED_ERROR)
-          .send({ message: "Access Denied" });
+      if (err.name === "CastError") {
+        return next(new BadRequestError("Invalid item ID"));
       }
-      if (err.message === "Not Found") {
-        return res.status(NOT_FOUND).send({ message: "Item not found" });
-      }
-      if (err.message === "Validation" || err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data" });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "Internal Server Error" });
+      handleErrors(err, next);
     });
 };
 
 // Like a clothing item
-const likeItem = (req, res) => {
+const likeItem = (req, res, next) => {
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     { $addToSet: { likes: req.user._id } },
     { new: true }
   )
-    .orFail()
+    .orFail(() => {
+      throw new NotFoundError("Item not found");
+    })
     .then((item) => res.send({ data: item }))
     .catch((err) => {
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: NotFoundError });
-      }
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: BadRequest });
+        return next(new BadRequestError("Invalid item ID"));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: InternalServerError });
+      handleErrors(err, next);
     });
 };
 
 // Dislike a clothing item
-const dislikeItem = (req, res) => {
+const dislikeItem = (req, res, next) => {
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     { $pull: { likes: req.user._id } },
     { new: true }
   )
-    .orFail()
+    .orFail(() => {
+      throw new NotFoundError("Item not found");
+    })
     .then((item) => res.send({ data: item }))
     .catch((err) => {
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: NotFoundError });
-      }
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: BadRequest });
+        return next(new BadRequestError("Invalid item ID"));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: InternalServerError });
+      handleErrors(err, next);
     });
 };
 
@@ -131,5 +96,4 @@ module.exports = {
   deleteItem,
   likeItem,
   dislikeItem,
-  ClothingItem,
 };

@@ -2,16 +2,23 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const mainRouter = require("./routes/index"); // Import the main router for handling routes
+const cors = require("cors");
+const { errors } = require("celebrate");
+const errorHandler = require("./middlewares/errorHandler");
+const { requestLogger, errorLogger } = require("./middlewares/logger"); // Ensure logger is imported before use
 
 // Create an instance of the Express application
 const app = express();
 
-const cors = require("cors");
+// Configure CORS
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "*",
   })
 );
+
+// Use the request logger middleware
+app.use(requestLogger);
 
 // Get the port from environment variables or default to 3001
 const { PORT = 3001 } = process.env;
@@ -33,6 +40,15 @@ app.use(cors());
 
 // Main routes
 app.use("/", mainRouter);
+
+// Use error logger middleware
+app.use(errorLogger);
+
+// celebrate error handler
+app.use(errors());
+
+// Centralized error handler
+app.use(errorHandler);
 
 // Start the server and listen on the specified port
 app.listen(PORT, () => {
