@@ -88,8 +88,8 @@ const login = (req, res, next) => {
           },
         });
       });
-    });
-  handleErrors(err, next);
+    })
+    .catch((err) => handleErrors(err, next)); // Fixed issue by moving handleErrors inside the catch block
 };
 
 // Update user
