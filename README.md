@@ -15,12 +15,20 @@ WTWR helps users decide what to wear based on current weather conditions.
 - **API Endpoints**: Provides RESTful API endpoints for managing users and clothing items.
 - **Testing & Deployment**: Implements unit testing, along with setup for deploying the app to production environments.
 
+## Production Domain
+
+The production server is accessible at:
+
+**`https://wtwr.info.gf`**
+
 ## Technologies Used
 
 - **Node.js**
 - **Express.js**
 - **MongoDB**
 - **Mongoose**
+- **MongoDBCompass**
+- **Prettier**
 - **nodemon** for development automation
 - **ESLint** and **Prettier** for code quality and formatting
 - **JWT (JSON Web Token)** for user authentication
@@ -44,7 +52,6 @@ WTWR helps users decide what to wear based on current weather conditions.
 - **User Sign-Up & Login**: Secure registration and authentication with JWT.
 - **Clothing Items**: Add, edit, delete, and retrieve clothing items.
 - **Weather-Based Recommendations**: Personalized suggestions based on current weather conditions.
-
 
 [Link to the project on GitHub] (https://github.com/julihejt/se_project_express)
 

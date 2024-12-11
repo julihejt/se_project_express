@@ -21,6 +21,13 @@ app.use(
 // Use the request logger middleware
 app.use(requestLogger);
 
+// server crash testing
+app.get("/crash-test", () => {
+  setTimeout(() => {
+    throw new Error("Server will crash now");
+  }, 0);
+});
+
 // Get the port from environment variables or default to 3001
 const { PORT = 3001 } = process.env;
 
