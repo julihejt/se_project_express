@@ -3,32 +3,41 @@ const express = require("express");
 const router = express.Router();
 
 // Import necessary controllers and routers
+const { celebrate, Joi } = require("celebrate");
 const userRouter = require("./users");
 const { login, createUser } = require("../controllers/users");
 const itemRouter = require("./clothingItems");
 
-// Import error utility for custom error messages
-const { NOT_FOUND, INTERNAL_SERVER_ERROR } = require("../utils/errors");
+// Import validation and error utilities
+const NotFoundError = require("../utils/errors");
+
+// Validation Schemas
+const loginSchema = celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().email().required(),
+    password: Joi.string().required().min(6),
+  }),
+});
+
+const signupSchema = celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    email: Joi.string().email().required(),
+    password: Joi.string().required().min(6),
+  }),
+});
 
 // Use routers for routes
 router.use("/items", itemRouter);
 router.use("/users", userRouter);
 
-// Signin and Signup routes
-router.post("/signin", login);
-router.post("/signup", createUser);
+// Signin and Signup routes with validation
+router.post("/signin", loginSchema, login);
+router.post("/signup", signupSchema, createUser);
 
 // 404 Route Handler (for undefined routes)
-router.use((req, res) => {
-  res.status(NOT_FOUND).json({ message: "Resource not found" });
-});
-
-// Error Handling Middleware
-router.use((err, req, res) => {
-  console.error(err.stack); // Log the error stack for debugging
-  res
-    .status(INTERNAL_SERVER_ERROR || 500)
-    .json({ message: "Internal Server Error" });
+router.use((req, res, next) => {
+  next(new NotFoundError("Resource not found"));
 });
 
 module.exports = router;

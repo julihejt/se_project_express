@@ -2,9 +2,9 @@ require("dotenv").config();
 // Import necessary modules
 const express = require("express");
 const mongoose = require("mongoose");
-const mainRouter = require("./routes/index"); // Import the main router for handling routes
 const cors = require("cors");
 const { errors } = require("celebrate");
+const mainRouter = require("./routes/index"); // Import the main router for handling routes
 const errorHandler = require("./middlewares/errorHandler");
 const { requestLogger, errorLogger } = require("./middlewares/logger"); // Ensure logger is imported before use
 

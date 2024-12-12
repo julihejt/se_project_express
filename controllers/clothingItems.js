@@ -1,7 +1,10 @@
 const ClothingItem = require("../models/clothingItems");
-const { OK, handleErrors } = require("../utils/errors"); // Import custom errors
-
+const { OK } = require("../utils/errors"); // Import custom status codes
+const BadRequestError = require("../errors/badRequestError");
+const InternalServerError = require("../utils/errors");
+const NotFoundError = require("../errors/notFoundError");
 const ForbiddenError = require("../errors/forbiddenError");
+
 // Create a new clothing item
 const createItem = (req, res, next) => {
   const { name, weather, imageUrl } = req.body;
@@ -17,7 +20,7 @@ const createItem = (req, res, next) => {
       if (err.name === "ValidationError") {
         return next(new BadRequestError("Invalid data"));
       }
-      handleErrors(err, next); // Pass to centralized error handler
+      return next(err); // Pass to centralized error handler
     });
 };
 
@@ -25,7 +28,7 @@ const createItem = (req, res, next) => {
 const getItems = (req, res, next) => {
   ClothingItem.find({})
     .then((items) => res.status(OK).send(items))
-    .catch((err) => next(new InternalServerError("Failed to fetch items")));
+    .catch(() => next(new InternalServerError("Failed to fetch items")));
 };
 
 // Delete a clothing item
@@ -48,7 +51,7 @@ const deleteItem = (req, res, next) => {
       if (err.name === "CastError") {
         return next(new BadRequestError("Invalid item ID"));
       }
-      handleErrors(err, next);
+      return next(err);
     });
 };
 
@@ -67,7 +70,7 @@ const likeItem = (req, res, next) => {
       if (err.name === "CastError") {
         return next(new BadRequestError("Invalid item ID"));
       }
-      handleErrors(err, next);
+      return next(err);
     });
 };
 
@@ -86,7 +89,7 @@ const dislikeItem = (req, res, next) => {
       if (err.name === "CastError") {
         return next(new BadRequestError("Invalid item ID"));
       }
-      handleErrors(err, next);
+      return next(err);
     });
 };
 

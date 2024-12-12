@@ -3,7 +3,12 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const { JWT_SECRET } = require("../utils/config");
 const { OK } = require("../utils/errors");
-const { handleErrors } = require("../utils/errors"); // Import custom errors
+
+// Define error classes
+const BadRequestError = require("../errors/badRequestError");
+const NotFoundError = require("../errors/notFoundError");
+const UnauthorizedError = require("../errors/unauthorizedError");
+const DuplicateError = require("../utils/errors");
 
 // Create a new user
 const createUser = (req, res, next) => {
@@ -13,7 +18,7 @@ const createUser = (req, res, next) => {
     return next(new BadRequestError("Email and password are required"));
   }
 
-  User.findOne({ email })
+  return User.findOne({ email }) // Added `return`
     .then((existingEmail) => {
       if (existingEmail) {
         throw new DuplicateError("User with this email already exists");
@@ -37,22 +42,22 @@ const createUser = (req, res, next) => {
       if (err.code === 11000) {
         return next(new DuplicateError("User with this email already exists"));
       }
-      handleErrors(err, next);
+      return next(err); // Added `return`
     });
 };
 
 // Get a single user by ID
-const getUser = (req, res, next) => {
-  User.findById(req.user._id)
-    .orFail(() => new NotFoundError("User not found"))
+const getUser = (req, res, next) => User.findById(req.user._id) // Added `return`
+    .orFail(() => {
+      throw new NotFoundError("User not found");
+    })
     .then((user) => res.status(OK).send(user))
     .catch((err) => {
       if (err.name === "CastError") {
         return next(new BadRequestError("Invalid user ID"));
       }
-      handleErrors(err, next);
+      return next(err); // Added `return`
     });
-};
 
 // Login controller
 const login = (req, res, next) => {
@@ -62,7 +67,7 @@ const login = (req, res, next) => {
     return next(new BadRequestError("Email and password are required"));
   }
 
-  User.findOne({ email })
+  return User.findOne({ email }) // Added `return`
     .select("+password")
     .then((user) => {
       if (!user) {
@@ -79,6 +84,7 @@ const login = (req, res, next) => {
         });
 
         return res.status(200).send({
+          // Added `return`
           token,
           user: {
             name: user.name,
@@ -89,25 +95,30 @@ const login = (req, res, next) => {
         });
       });
     })
-    .catch((err) => handleErrors(err, next)); // Fixed issue by moving handleErrors inside the catch block
+    .catch((err) => 
+       next(err) // Added `return`
+    );
 };
 
 // Update user
 const updateUser = (req, res, next) => {
   const { name, avatar } = req.body;
 
-  User.findByIdAndUpdate(
+  return User.findByIdAndUpdate(
+    // Added `return`
     req.user._id,
     { name, avatar },
     { new: true, runValidators: true }
   )
-    .orFail(() => new NotFoundError("User not found"))
+    .orFail(() => {
+      throw new NotFoundError("User not found");
+    })
     .then((user) => res.status(200).send({ data: user }))
     .catch((err) => {
       if (err.name === "ValidationError") {
         return next(new BadRequestError("Invalid user data"));
       }
-      next(err);
+      return next(err); // Added `return`
     });
 };
 
