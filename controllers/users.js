@@ -8,7 +8,7 @@ const { OK } = require("../utils/errors");
 const BadRequestError = require("../errors/badRequestError");
 const NotFoundError = require("../errors/notFoundError");
 const UnauthorizedError = require("../errors/unauthorizedError");
-const DuplicateError = require("../utils/errors");
+const DuplicateError = require("../errors/conflictError");
 
 // Create a new user
 const createUser = (req, res, next) => {
@@ -47,7 +47,8 @@ const createUser = (req, res, next) => {
 };
 
 // Get a single user by ID
-const getUser = (req, res, next) => User.findById(req.user._id) // Added `return`
+const getUser = (req, res, next) =>
+  User.findById(req.user._id) // Added `return`
     .orFail(() => {
       throw new NotFoundError("User not found");
     })
@@ -95,8 +96,8 @@ const login = (req, res, next) => {
         });
       });
     })
-    .catch((err) => 
-       next(err) // Added `return`
+    .catch(
+      (err) => next(err) // Added `return`
     );
 };
 

@@ -9,16 +9,17 @@ const {
   deleteItem,
   likeItem,
   dislikeItem,
+  createItem, // Correctly import the createItem controller
 } = require("../controllers/clothingItems");
 
 // Validation Schemas
-const itemId = celebrate({
+const itemIdValidation = celebrate({
   params: Joi.object().keys({
     itemId: Joi.string().hex().length(24).required(),
   }),
 });
 
-const createItem = celebrate({
+const createItemValidation = celebrate({
   body: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
     weather: Joi.string().valid("hot", "warm", "cold").required(),
@@ -34,16 +35,16 @@ router.use(auth);
 
 // Protected Routes
 // Create a new clothing item
-router.post("/", createItem, createItem);
+router.post("/", createItemValidation, createItem); // Use a properly named validation schema
 
 // Delete a clothing item by ID
-router.delete("/:itemId", itemId, deleteItem);
+router.delete("/:itemId", itemIdValidation, deleteItem);
 
 // Like a clothing item by ID
-router.put("/:itemId/likes", itemId, likeItem);
+router.put("/:itemId/likes", itemIdValidation, likeItem);
 
 // Dislike a clothing item by ID
-router.delete("/:itemId/likes", itemId, dislikeItem);
+router.delete("/:itemId/likes", itemIdValidation, dislikeItem);
 
 // Export the router so it can be used in the main application
 module.exports = router;

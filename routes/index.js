@@ -1,14 +1,9 @@
 const express = require("express");
-
 const router = express.Router();
-
-// Import necessary controllers and routers
 const { celebrate, Joi } = require("celebrate");
 const userRouter = require("./users");
 const { login, createUser } = require("../controllers/users");
 const itemRouter = require("./clothingItems");
-
-// Import validation and error utilities
 const NotFoundError = require("../utils/errors");
 
 // Validation Schemas
@@ -24,6 +19,7 @@ const signupSchema = celebrate({
     name: Joi.string().min(2).max(30),
     email: Joi.string().email().required(),
     password: Joi.string().required().min(6),
+    avatar: Joi.string().uri().optional(),
   }),
 });
 
