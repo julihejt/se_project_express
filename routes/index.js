@@ -1,10 +1,14 @@
 const express = require("express");
+
 const router = express.Router();
 const { celebrate, Joi } = require("celebrate");
+
 const userRouter = require("./users");
-const { login, createUser } = require("../controllers/users");
 const itemRouter = require("./clothingItems");
-const NotFoundError = require("../utils/errors");
+
+const { login, createUser } = require("../controllers/users");
+
+const NotFoundError = require("../errors/notFoundError");
 
 // Validation Schemas
 const loginSchema = celebrate({
